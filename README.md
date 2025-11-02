@@ -5,6 +5,11 @@ Login to Azure:
 az login
 ```
 
+List account subscriptions:
+```bash
+az account list -o table
+```
+
 List Azure VMs:
 ```bash
 az vm list
