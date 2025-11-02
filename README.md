@@ -10,6 +10,11 @@ List account subscriptions:
 az account list -o table
 ```
 
+List all images from Canonical:
+```bash
+az vm image list --publisher Canonical -o table
+```
+
 List Azure VMs:
 ```bash
 az vm list
