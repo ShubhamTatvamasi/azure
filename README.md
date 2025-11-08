@@ -1,5 +1,7 @@
 # azure
 
+https://azure.microsoft.com/en-in/pricing/calculator/
+
 Login to Azure:
 ```bash
 az login
