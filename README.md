@@ -2,6 +2,8 @@
 
 https://azure.microsoft.com/en-in/pricing/calculator/
 
+https://github.com/Azure/azure-quickstart-templates
+
 Login to Azure:
 ```bash
 az login
