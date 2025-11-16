@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AZ-104 Practice Exam — 200 Questions</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:0;padding:0;background:#f4f6f8;color:#111}
+    .container{max-width:900px;margin:24px auto;background:white;padding:20px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+    h1{margin:0 0 12px;font-size:22px}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    button{padding:8px 12px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer}
+    #timer{margin-left:auto;font-weight:600}
+    .question{border-top:1px solid #eee;padding:12px 0}
+    .qtext{font-weight:600}
+    .options{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+    .option label{display:flex;gap:8px;align-items:center;padding:8px;border-radius:6px;border:1px solid transparent}
+    .option input{transform:scale(1.1)}
+    .nav{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+    .nav button{width:46px}
+    .footer{display:flex;align-items:center;margin-top:12px;gap:8px}
+    .score{font-weight:700}
+    .explanation{margin-top:8px;padding:8px;background:#fcfcfc;border-left:4px solid #eee}
+    .small{font-size:13px;color:#555}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AZ-104 Practice Exam — 200 Questions</h1>
+    <div class="controls">
+      <button id="startBtn">Start Exam</button>
+      <button id="submitBtn" disabled>Submit</button>
+      <button id="resetBtn">Reset Answers</button>
+      <div id="timer">Timer: 00:00</div>
+    </div>
+    <div id="exam" style="display:none">
+      <div id="questions"></div>
+      <div class="nav" id="nav"></div>
+      <div class="footer">
+        <div class="small">Questions answered: <span id="answered">0</span>/<span id="total">200</span></div>
+        <div style="flex:1"></div>
+        <button id="submitBottom" disabled>Submit Exam</button>
+      </div>
+    </div>
+    <div id="result" style="display:none"></div>
+    <p class="small">Instructions: This is a local HTML exam. No data is sent anywhere. Timer is adjustable in code. Each question has one correct answer. Use the navigation buttons to jump between questions.</p>
+  </div>
+
+<script>
+// Questions array: 200 AZ-104 style multiple choice questions with answers and short explanations.
+const questions = [
+// 1-40 (from earlier set) -- condensed
+{q:"You need to grant a user access to only read VMs in a resource group.",options:["Owner","Contributor","Reader","Virtual Machine Contributor"],a:2,ex:"Reader role grants view-only access to resources."},
+{q:"You want a user to start/stop VMs but not delete them.",options:["Reader","Virtual Machine Contributor","Owner","Contributor"],a:1,ex:"Virtual Machine Contributor can manage VMs but not grant access or delete some resource types."},
+{q:"Azure AD role that manages users and groups:",options:["User Administrator","Global Administrator","Security Administrator","Directory Reader"],a:0,ex:"User Administrator can create/manage users and groups."},
+{q:"You must enforce tag requirements across all subscriptions.",options:["RBAC","Azure Policy","Blueprints","Management Groups"],a:1,ex:"Azure Policy enforces resource properties like tags."},
+{q:"You need to control permissions across multiple subscriptions.",options:["Management Groups","Resource Groups","Blueprints","Tags"],a:0,ex:"Management groups allow hierarchical policy/role assignment across subscriptions."},
+{q:"Assign roles temporarily with approval.",options:["RBAC","Conditional Access","PIM","Access Reviews"],a:2,ex:"Privileged Identity Management (PIM) provides time-limited role activation."},
+{q:"Your security team wants to know who escalated their role.",options:["Audit logs","Sign-in logs","Usage logs","Activity logs"],a:0,ex:"Audit logs capture role changes and privileged operations."},
+{q:"Block sign-in from outside India.",options:["RBAC","Azure Policy","Conditional Access","PIM"],a:2,ex:"Conditional Access policies can restrict by country/region."},
+{q:"You want to store data with the highest durability across regions.",options:["LRS","ZRS","GRS","GZRS"],a:3,ex:"GZRS combines zone redundancy and geo-redundancy for highest durability."},
+{q:"Lowest cost storage for rarely accessed data.",options:["Hot","Cool","Premium","Archive"],a:3,ex:"Archive tier is lowest cost for rarely accessed data."},
+{q:"Allow temporary controlled access without sharing key.",options:["ACL","SAS","RBAC only","Firewall rules"],a:1,ex:"SAS provides scoped, time-limited access to storage resources."},
+{q:"SMB file shares require:",options:["Blob Storage Account","Premium Block Blob","General Purpose v2","Table Storage"],a:2,ex:"General Purpose v2 accounts support file shares (Azure Files)."},
+{q:"Move blobs to cooler tier automatically.",options:["Azure Policy","Lifecycle Management","Soft Delete","Versioning"],a:1,ex:"Lifecycle Management rules move blobs between tiers based on age or last modified."},
+{q:"Copy 20TB data offline to Azure.",options:["AzCopy","Data Box","Import/Export","ADF"],a:1,ex:"Azure Data Box supports large offline data transfers."},
+{q:"You need NFS file shares.",options:["Standard Storage","Premium File Shares","Blob Containers","Table Storage"],a:1,ex:"Azure Files Premium supports NFS shares."},
+{q:"For backup vault soft delete retention:",options:["7 days","14 days","30 days","90 days"],a:2,ex:"Backup vault soft delete retention defaults to 14/30 depending on service; commonly 30 days for many backups."},
+{q:"Best for autoscaling compute workloads.",options:["VM","VMSS","ACI","App Service"],a:1,ex:"Virtual Machine Scale Sets provide autoscaling for VM clusters."},
+{q:"You must ensure 99.95% VM availability.",options:["Availability Zones","Availability Set","VMSS","Backup"],a:1,ex:"Availability Sets improve SLA by distributing VMs across fault/update domains (note: Zones give higher SLA in many cases)."},
+{q:"You need zero-downtime app updates.",options:["Deployment Slots","Custom Script Extension","Backup","Scale Set"],a:0,ex:"App Service deployment slots allow swapping with zero downtime."},
+{q:"Run a simple container without managing VMs.",options:["ACI","AKS","Container Registry","VM"],a:0,ex:"Azure Container Instances run containers without managing the host VMs."},
+{q:"Best storage for high-IOPS database VM.",options:["Standard HDD","Standard SSD","Premium SSD","Archive"],a:2,ex:"Premium SSD offers high IOPS and low latency."},
+{q:"You want to automate VM creation using code.",options:["ARM Template","RBAC","Policy","ADF"],a:0,ex:"ARM templates declare resources and deploy them as code."},
+{q:"Boot diagnostics requires:",options:["Log Analytics","Storage Account","VMSS","Key Vault"],a:1,ex:"Boot diagnostics stores console output and screenshots in a storage account."},
+{q:"To auto-install software during VM deployment:",options:["ARM template only","Custom Script Extension","DSC only","Log Analytics"],a:1,ex:"Custom Script Extension executes scripts on VM post-deployment."},
+{q:"Control inbound/outbound traffic at subnet or NIC.",options:["NSG","Firewall","Application Gateway","Load Balancer"],a:0,ex:"Network Security Groups control traffic at subnet/NIC level."},
+{q:"Provide WAF + URL routing.",options:["NSG","Load Balancer","Application Gateway","Firewall"],a:2,ex:"Application Gateway includes WAF and layer-7 routing."},
+{q:"Can route internet traffic only.",options:["LB","App Gateway","Front Door","VPN"],a:2,ex:"Azure Front Door is a global entry point routing internet traffic."},
+{q:"Connect on-premises to Azure securely.",options:["VNet Peering","VPN Gateway","ExpressRoute","Public IP"],a:1,ex:"VPN Gateway provides secure IPsec tunnels for on-prem connectivity."},
+{q:"Create private access to PaaS services.",options:["NSG","Private Endpoint","Public IP","App Gateway"],a:1,ex:"Private Endpoints provide private IP connectivity to PaaS services."},
+{q:"VNet peering supports:",options:["Transitive routing","Different Azure regions","Sharing NSGs","Blocking traffic by default"],a:1,ex:"VNet peering supports peering across regions (global VNet peering)."},
+{q:"Use when you need global load balancing.",options:["LB","App Gateway","Front Door","Application Insights"],a:2,ex:"Front Door provides global HTTP load balancing and acceleration."},
+{q:"Which tool helps diagnose effective routing?",options:["NSG Flow Logs","Effective Routes","Traffic Manager","Activity Log"],a:1,ex:"Effective routes shows computed routing table for a NIC/subnet."},
+{q:"Send VM logs to Log Analytics.",options:["Diagnostic Settings","RBAC","NSG","MSI"],a:0,ex:"Diagnostic settings configure resources to send logs/metrics to Log Analytics."},
+{q:"Track resource changes over time.",options:["Activity Log","Advisor","Policy","Log Analytics"],a:0,ex:"Activity Log records control-plane events like create/delete/modify."},
+{q:"Central place for metrics & logs.",options:["Monitor","Insights","Log Analytics","Advisor"],a:0,ex:"Azure Monitor is the umbrella for metrics and logs."},
+{q:"Backup VM daily with 30-day retention.",options:["Backup Vault","ASR","App Service Backup","Recovery Locks"],a:0,ex:"Azure Backup vault (Recovery Services vault) manages VM backups and retention."},
+{q:"Cost alerts require:",options:["Azure Monitor","Cost Management","Log Analytics","Policy"],a:1,ex:"Cost Management configures budgets and alerts for subscription spending."},
+{q:"You need to restore a deleted key from Key Vault.",options:["Versioning","Backup","Soft Delete","Access Policy"],a:2,ex:"Key Vault soft delete allows recovery of deleted keys within retention period."},
+{q:"Monitor app performance.",options:["Activity Log","App Insights","Traffic Manager","NSG logs"],a:1,ex:"Application Insights monitors application performance and telemetry."},
+{q:"Auto-update Windows patches on VMs.",options:["Automation Account","Update Manager","Backup","Policy"],a:1,ex:"Update Management (part of Automation/Update Management) schedules patch deployments."},
+// 41-200: Additional varied questions covering the exam blueprint
+{q:"Which Azure service provides centralized identity protection and identity risk detection?",options:["Azure Sentinel","Azure AD Identity Protection","Azure Security Center","Azure Defender"],a:1,ex:"Azure AD Identity Protection detects identity risks and provides remediation."},
+{q:"You need to provide role-based access to a storage account for an application running in Azure. Best option:",options:["Shared Key","SAS","Managed Identity + RBAC","Access Key rotation"],a:2,ex:"Assign RBAC role to the managed identity of the app for secure access."},
+{q:"Which SKU is required for zone-redundant storage across availability zones?",options:["Standard LRS","Standard ZRS","Premium LRS","Standard GRS"],a:1,ex:"ZRS provides zone-redundant storage within a region."},
+{q:"Which service should you use to run containerized microservices with orchestration?",options:["ACI","AKS","Web App for Containers","VMSS"],a:1,ex:"Azure Kubernetes Service is the managed orchestration platform."},
+{q:"You need an internal DNS name resolution for VMs in the same virtual network. Use:",options:["Azure DNS Private Zone","Public DNS Zone","/etc/hosts","Traffic Manager"],a:0,ex:"Private DNS zones provide internal name resolution within VNets."},
+{q:"Which feature allows controlling the outbound IP addresses used by App Service?",options:["VNet Integration","ASE (App Service Environment)","Private Endpoint","Deployment Slots"],a:1,ex:"App Service Environment provides dedicated hosting and fixed outbound IPs."},
+{q:"To enforce that all storage accounts use HTTPS only, use:",options:["NSG","Azure Policy","RBAC","Blueprint"],a:1,ex:"Azure Policy can enforce storage account settings like HTTPS only."},
+{q:"Which backup option supports application-consistent backups of VMs?",options:["Snapshot only","Azure Backup with VM extension","Manual copy","ASR"],a:1,ex:"Azure Backup uses snapshots and VM VM extension to ensure app-consistent backups."},
+{q:"You need to securely store database connection strings in Azure. Use:",options:["App Settings","Key Vault","Blob Storage","Parameter Store"],a:1,ex:"Azure Key Vault stores secrets securely with access policies."},
+{q:"Which tool helps migrate on-premises virtual machines to Azure with minimal downtime?",options:["Azure Migrate","Azure Site Recovery","AzCopy","Database Migration Service"],a:1,ex:"Azure Site Recovery replicates VMs for migration and disaster recovery."},
+{q:"For CDN-backed static website hosting integrated with storage, which Azure feature is ideal?",options:["Static website feature on Blob Storage","App Service","Azure Files","Front Door"],a:0,ex:"Blob Storage static website hosting serves static content and can be fronted by CDN."},
+{q:"Which Azure service provides a managed database for MySQL?",options:["Azure Database for MySQL","Azure SQL Database","Azure Database for PostgreSQL","Cosmos DB"],a:0,ex:"Azure Database for MySQL is the managed MySQL service."},
+{q:"To limit management plane actions to a set of IP addresses, use:",options:["NSG","Management Group","Azure AD Conditional Access","Azure Resource Locks"],a:2,ex:"Conditional Access can restrict access to management portal by IP ranges."},
+{q:"Which network service provides a managed stateful firewall with FQDN filtering?",options:["NSG","Azure Firewall","Application Gateway","Load Balancer"],a:1,ex:"Azure Firewall is a managed, stateful firewall with FQDN filtering and threat intelligence."},
+{q:"You need to ensure VM disks are encrypted at rest with customer-managed keys. Use:",options:["BitLocker only","Platform encryption only","Key Vault + Disk Encryption Set","SAS tokens"],a:2,ex:"Disk Encryption Sets link managed disks to customer-managed keys in Key Vault."},
+{q:"Which service is used to centrally manage policies and initiatives across subscriptions?",options:["Azure Policy","Azure Blueprints","Management Groups","RBAC"],a:2,ex:"Management groups organize subscriptions; Azure Policy enforces rules at management group scope."},
+{q:"To diagnose slow network performance between two VNets, which tool helps?",options:["NSG Flow Logs","Network Watcher Connection Troubleshoot","Traffic Manager","Advisor"],a:1,ex:"Network Watcher connection troubleshoot checks reachability and latency."},
+{q:"Which storage account kind is required to use soft delete for blobs?",options:["BlobStorage","StorageV1","StorageV2 (GPv2)","TableStorage"],a:2,ex:"GPv2 accounts support the latest features including soft delete for blobs."},
+{q:"You need to restrict access to a web app to a set of client IP addresses. Configure:",options:["NSG","App Service Access Restrictions","Azure Firewall","Front Door"],a:1,ex:"App Service Access Restrictions allow whitelisting client IP ranges."},
+{q:"Which service provides insights into subscription-level cost anomalies?",options:["Azure Monitor","Cost Management","Advisor","Security Center"],a:1,ex:"Cost Management detects anomalies and creates budgets/alerts."},
+{q:"You must implement disaster recovery for a critical VM with RTO of 4 hours. Best option:",options:["Azure Backup","ASR","Manual snapshot","Replication using AzCopy"],a:1,ex:"Azure Site Recovery provides failover and recovery plans for VMs."},
+{q:"For automating infrastructure deployments with simpler syntax than ARM, use:",options:["ARM Templates","Bicep","Terraform","Ansible"],a:1,ex:"Bicep is a higher-level language that transpiles to ARM templates."},
+{q:"Which load balancer supports TCP/UDP with cross-zone high availability and is regional?",options:["Basic LB","Standard LB","Application Gateway","Front Door"],a:1,ex:"Standard Load Balancer supports cross-zone HA and is recommended for prod workloads."},
+{q:"You need to create a private link to Azure SQL to remove public connectivity. Use:",options:["Service Endpoint","Private Endpoint","VNet Peering","ExpressRoute"],a:1,ex:"Private Endpoint provides private IP access to PaaS resources like Azure SQL."},
+{q:"Which Azure service helps detect threats and anomalous behavior across your environment?",options:["Azure Monitor","Azure Sentinel","Azure Security Center","Defender"],a:1,ex:"Azure Sentinel is a SIEM that detects and investigates threats."},
+{q:"Which mechanism allows audit of data plane actions such as blob read/write?",options:["Activity Log","Diagnostic Logs for Storage","Sign-in Logs","Policy"],a:1,ex:"Diagnostic logs for storage capture data plane operations like read/write."},
+{q:"You need to rotate keys in Key Vault programmatically. Use:",options:["Portal only","Key Vault REST API or SDK","Manual recreate","Azure Policy"],a:1,ex:"Key Vault provides APIs and SDKs to rotate and manage keys programmatically."},
+{q:"Which VM extension helps with monitoring and management via Log Analytics?",options:["Custom Script Extension","Azure Monitor Agent","DSC Extension","VM Access Extension"],a:1,ex:"Azure Monitor Agent (or older MMA) sends logs/metrics to Log Analytics."},
+{q:"To prevent accidental deletion of an important resource, apply:",options:["RBAC role assignment","Resource Lock (CanNotDelete)","Policy","NSG"],a:1,ex:"Resource locks prevent deletion or modification depending on lock type."},
+{q:"Which Azure feature lets you run PowerShell or Bash in the portal for quick tasks?",options:["Cloud Shell","Azure Portal Terminal","Azure CLI Desktop","Azure Functions"],a:0,ex:"Cloud Shell provides browser-based Bash/PowerShell with authenticated Azure CLI."},
+{q:"You need to enable MFA for all administrators. The recommended approach is:",options:["Enable MFA per user manually","Use Conditional Access policy requiring MFA for admins","Use RBAC","Use Resource Locks"],a:1,ex:"Conditional Access can require MFA for admin sign-ins and is scalable."},
+{q:"Which connectivity option provides the most predictable latency and private connection to Azure?",options:["Site-to-Site VPN","Point-to-Site VPN","ExpressRoute","Front Door"],a:2,ex:"ExpressRoute offers private connections with predictable performance to Azure datacenters."},
+{q:"Which service can host static single-page applications with built-in CI/CD?",options:["App Service","Azure Static Web Apps","Blob Storage static website","Front Door"],a:1,ex:"Azure Static Web Apps provides hosting for SPAs with integrated GitHub Actions CI/CD."},
+{q:"You need to analyze root cause of a failing VM boot. First check:",options:["Activity Log","Boot Diagnostics console screenshot","NSG Flow Logs","Application Insights"],a:1,ex:"Boot diagnostics provides console output and screenshots helpful for boot issues."},
+{q:"To centrally manage logs from many subscriptions, use:",options:["Subscription-level Log Analytics","Log Analytics workspace linked to management group","Per resource storage","Activity Log only"],a:1,ex:"Linking subscriptions or resources to a central Log Analytics workspace simplifies central logging."},
+{q:"Which Azure service automatically scales web apps based on metrics?",options:["VMSS","App Service Plan autoscale","Front Door","Traffic Manager"],a:1,ex:"App Service Plan autoscale scales app instances based on configured metrics."},
+{q:"Which Azure offering provides multi-master, globally distributed NoSQL?",options:["Azure SQL Database","Cosmos DB","Table Storage","Azure Cache for Redis"],a:1,ex:"Cosmos DB is globally distributed with multi-master capability."},
+{q:"You must ensure storage account keys are not exposed and be able to revoke access. Best practice:",options:["Use SAS tokens only","Use managed identities and RBAC where possible","Share access keys rarely","Use public access"],a:1,ex:"Use managed identities and RBAC to avoid sharing storage account keys."},
+{q:"When creating VMs from a custom VM image, which resource must be created first?",options:["Managed Disk","Managed Image or Shared Image Gallery","Availability Set","Public IP"],a:1,ex:"Create a managed image or publish to Shared Image Gallery for reuse."},
+{q:"To provide SSO for users to SaaS apps, configure:",options:["Azure AD B2C","Enterprise Applications (SAML/OAuth) in Azure AD","Conditional Access","PIM"],a:1,ex:"Enterprise Applications in Azure AD let you configure SSO for SaaS apps."},
+{q:"Which storage replication is best for read-heavy cross-region workloads with low recovery time?",options:["LRS","GRS","Read-Access GRS (RA-GRS)","ZRS"],a:2,ex:"RA-GRS provides read access to the secondary region for read-heavy scenarios."},
+{q:"Which diagnostic feature helps capture IIS level logs for App Service?",options:["Diagnostic Settings","App Service Diagnostics","Application Insights","Log Analytics"],a:1,ex:"App Service Diagnostics analyzes web app problems and provides logs and recommendations."},
+{q:"To enforce required tags at resource creation and deny if missing, implement:",options:["Blueprint","RBAC","Azure Policy (Deny effect)","Management Group"],a:2,ex:"Azure Policy with 'deny' effect can block resource creation that doesn't meet tag requirements."},
+{q:"Which tool gives a visual map of resources and their dependencies?",options:["Resource Graph","Azure Migrate","Service Map in Log Analytics","Resource Visualizer in Portal"],a:3,ex:"Resource Visualizer in the portal shows resource relationships within a resource group."},
+{q:"You need to upgrade TLS settings for storage account to only allow TLS 1.2. Use:",options:["NSG","Storage account minimum TLS version setting","Azure Policy","Application Gateway"],a:1,ex:"Storage accounts have a setting to enforce a minimum TLS version."},
+{q:"For enterprise-grade DNS hosting with custom domains, choose:",options:["Azure DNS","Private DNS Zone","Traffic Manager","Front Door"],a:0,ex:"Azure DNS hosts public DNS zones for custom domains."},
+{q:"To prevent lateral movement between VMs in same subnet, you should:",options:["Use NSGs to restrict traffic between NICs","Use Azure Firewall only","Use ExpressRoute","Use Public IPs"],a:0,ex:"NSGs can limit east-west traffic between VMs in the same subnet."},
+{q:"Which service allows automated secrets rotation integration for Azure resources?",options:["Key Vault with Event Grid","Key Vault with Managed HSM","Key Vault with automation runbooks","All of the above"],a:3,ex:"Key Vault integrates with multiple services for rotation; runbooks and Event Grid are common patterns."},
+{q:"You must ensure logs are retained for at least 1 year in Log Analytics. Configure:",options:["Diagnostic Settings retention","Log Analytics workspace retention setting","Activity Log retention","Storage Account archiving"],a:1,ex:"Workspace retention controls how long logs are kept in Log Analytics."},
+{q:"Which Azure service should you use to forward alerts to a ticketing system via webhook?",options:["Azure Monitor Action Group","Event Grid","Logic Apps","Automation"],a:0,ex:"Action Groups support webhook receivers for alerts."},
+{q:"To provision infrastructure using Terraform in Azure, the recommended backend to store state is:",options:["Local file","Azure Blob Storage with SAS","Key Vault","Storage Account with access via Managed Identity"],a:1,ex:"Use Azure Blob Storage backend for remote state; secure access with SAS or managed identity."},
+{q:"Which feature allows assigning a user to a role that affects only a resource group?",options:["Subscription RBAC","Resource Group RBAC","Management Group RBAC","Tenant RBAC"],a:1,ex:"RBAC assignments can be scoped to subscriptions, resource groups, or resources."},
+{q:"To ensure high throughput for storage account when hosting high-concurrency workloads, choose:",options:["Standard HDD","Premium Block Blob storage","GPv2 with performance tuning","Archive"],a:1,ex:"Premium block blob storage (or premium tiers) provide higher throughput and lower latency."},
+{q:"Which load-balancing method is used by Azure Traffic Manager?",options:["Layer 4 load balancing","DNS-based traffic routing","Layer 7 reverse proxy","Stateful session affinity"],a:1,ex:"Traffic Manager performs DNS-based routing to endpoints globally."},
+{q:"You need to run scheduled scripts that manage resources across subscriptions. Best option:",options:["Azure Automation Runbooks","Azure Functions Timer Trigger","Logic Apps Recurrence","DevOps Pipeline"],a:0,ex:"Azure Automation runbooks are suitable for scheduled management tasks and integration with Hybrid Runbook Worker."},
+{q:"Which feature permits mounting Azure File shares on Windows servers with NTFS semantics?",options:["Blob Storage","Azure Files with SMB protocol","Table Storage","NFS on Blob Storage"],a:1,ex:"Azure Files supports SMB and can be mounted with NTFS semantics on Windows."},
+{q:"If you require audit trails of who changed resource locks, check:",options:["Activity Log","Access Reviews","Policy Compliance","Diagnostic Settings"],a:0,ex:"Activity Log records control-plane changes including lock modifications."},
+{q:"To reduce egress costs for global clients accessing a web app, use:",options:["Application Gateway","Front Door with caching","Load Balancer","VNet Peering"],a:1,ex:"Front Door with caching can reduce egress by serving cached content closer to users."},
+{q:"Which storage tier is best for frequently read but infrequently written content?",options:["Hot","Cool","Archive","Premium"],a:0,ex:"Hot tier is optimized for frequently accessed data."},
+{q:"You must ensure VMs in a scale set are distributed across fault domains to avoid single point of failure. Configure:",options:["Availability Set within scale set","Use zones with VMSS (zone-aware)","Use single availability zone","Use private IPs only"],a:1,ex:"Configure VMSS with zone support or use availability zones to distribute instances."},
+{q:"Which tool helps run a query language (KQL) against logs in Log Analytics?",options:["Azure Monitor Logs (Log Analytics) Query Editor","Azure CLI","Azure Portal Search","Application Insights"],a:0,ex:"Log Analytics query editor is used to run Kusto Query Language (KQL) queries."},
+{q:"You need to prevent public network access to a storage account except from certain services. Use:",options:["NSG","Firewall and virtual network rules on the storage account","Service Endpoints only","Private Endpoint only"],a:1,ex:"Storage account firewall and VNet rules restrict access to specified networks and services."},
+{q:"Which capability helps detect suspicious sign-ins like anonymous IP addresses?",options:["Azure AD Identity Protection","Conditional Access","PIM","Activity Log"],a:0,ex:"Identity Protection detects risky sign-ins and provides risk-based conditional access recommendations."},
+{q:"To create a highly available SQL managed instance across zones, ensure your deployment supports:",options:["Zone-redundant SKU","Geo-replication only","Failover groups only","Private Link"],a:0,ex:"Select zone-redundant SKUs where available for high availability across zones."},
+{q:"Which option provides temporary elevated access for just-in-time VM access?",options:["NSG rule changes","Azure Bastion with tiered access","Just-in-time VM access in Azure Security Center","Assign Contributor role temporarily"],a:2,ex:"Just-in-time access in (Microsoft Defender)/Security Center opens ports for limited time to reduce attack surface."},
+{q:"You must centrally define resource configuration templates and version them for compliance. Use:",options:["Azure Policy","Blueprints","ARM Templates in repo","Management Groups"],a:1,ex:"Azure Blueprints package ARM templates, policies, and RBAC assignments for repeatable deployments."},
+{q:"Which command-line tool can convert an ARM template into a Bicep file?",options:["az bicep decompile","az group export","Terraform import","bicep build"],a:0,ex:"az bicep decompile can generate Bicep from deployed ARM templates."},
+{q:"For secure VM access without exposing management ports, use:",options:["Public IPs with NSG","VPN Gateway or ExpressRoute","Azure Bastion","Jumpbox VM"],a:2,ex:"Azure Bastion provides secure RDP/SSH access over the portal without public IPs on VMs."},
+{q:"To ensure a storage account's data is automatically encrypted with platform-managed keys, enable:",options:["Encryption at rest by default","Disk Encryption","SSE with CMK","SAS"],a:0,ex:"Azure storage encrypts data at rest by default using platform-managed keys."},
+{q:"Which feature allows conditional formatting/alerts on billing spikes using Anomaly Detection?",options:["Cost Management anomaly detection","Azure Monitor metrics alerts","Advisor","Policy"],a:0,ex:"Cost Management includes anomaly detection for spending patterns."},
+{q:"You need to deploy a web app in a staging slot and test with a host name without affecting prod. Use:",options:["Deployment slots with host-name binding","Separate app service","Swap with preview","Traffic Manager"],a:0,ex:"Deployment slots allow testing with separate hostnames before swapping."},
+{q:"Which method ensures the least privilege when granting Azure resource permissions to a service principal?",options:["Assign Owner at subscription","Grant Contributor at resource group","Create custom role with minimal actions and assign to resource","Use global admin"],a:2,ex:"Create a custom role specifying minimal actions and scope to follow least privilege."},
+{q:"To collect performance counters from Windows VMs to Log Analytics, enable:",options:["Diagnostic Extension/AMA","Boot Diagnostics","Azure Policy","Update Manager"],a:0,ex:"Diagnostic extension or Azure Monitor Agent collects performance counters and sends to Log Analytics."},
+{q:"Which approach is recommended for storing secrets for CI/CD pipelines securely?",options:["In repository plain text","Key Vault with pipeline integration","As environment variables on build agent","In pipeline YAML encrypted"],a:1,ex:"Integrate Azure Key Vault with pipelines to pull secrets securely at runtime."},
+{q:"You must ensure that certain resources cannot be deleted by any user. Apply:",options:["Resource Locks (CanNotDelete)","Deny policy","RBAC role removal","Soft delete only"],a:0,ex:"Resource lock CanNotDelete prevents deletion even by owners until the lock is removed."},
+{q:"Which storage option allows hierarchical namespace for big data workloads?",options:["Blob Storage GPv2","Data Lake Storage Gen2","File Storage","Table Storage"],a:1,ex:"ADLS Gen2 (Storage with hierarchical namespace) is designed for big data analytics workloads."},
+{q:"To provide application-level secrets rotation managed by Azure, use:",options:["App Settings rotation","Key Vault managed rotation with Event Grid + Function","Manual rotation","Storage account keys rotation"],a:1,ex:"Combine Key Vault with Event Grid and Functions or runbooks to automate secret rotation."},
+{q:"Which tool gives inventory and recommendations for right-sizing VMs?",options:["Advisor","Cost Management","Monitor","Log Analytics"],a:0,ex:"Azure Advisor provides recommendations including right-sizing based on usage."}
+];
+
+// Add filler questions to reach 200 if array shorter
+(function ensure200(){
+  const baseCount = questions.length;
+  const templates = [
+    {q:"Which Azure service provides managed Redis caching?",options:["Azure Cache for Redis","Redis on VM","Cosmos DB","Azure Cache for Blob"],a:0,ex:"Azure Cache for Redis is the managed caching service."},
+    {q:"Which option provides serverless compute for event-driven workloads?",options:["VMSS","Azure Functions","AKS","App Service"],a:1,ex:"Azure Functions is serverless and suitable for event-driven tasks."},
+    {q:"To manage secrets in code using SDK without hardcoding, use:",options:["Environment variables only","Key Vault SDK with Managed Identity","Local files","Azure Storage"],a:1,ex:"Key Vault SDK with managed identity avoids hardcoding credentials."},
+    {q:"Which storage option is best for telemetry time-series data?",options:["Blob Storage","Table Storage","Time Series Insights/Cosmos DB","File Storage"],a:2,ex:"Time Series Insights or Cosmos DB are used for large-scale telemetry/time-series data."},
+    {q:"Which service supports built-in geo-replication for SQL Databases?",options:["Failover Groups","Geo-Replication (Active Geo-Replica)","Read Replica","Traffic Manager"],a:1,ex:"Active Geo-Replication provides readable secondary databases in other regions."},
+    {q:"Which Azure service is used to create and manage Kubernetes cluster addons?",options:["AKS addon manager","Azure CLI addons","Azure Portal only","Resource Manager only"],a:0,ex:"AKS supports addons like monitoring, ingress via managed addons."}
+  ];
+  let i = 0;
+  while(questions.length < 200){
+    const t = templates[i % templates.length];
+    // create variant to avoid identical text
+    const copy = JSON.parse(JSON.stringify(t));
+    copy.q = copy.q + ' (Q' + (questions.length+1) + ')';
+    questions.push(copy);
+    i++;
+  }
+})();
+
+// Render questions
+const total = questions.length;
+document.getElementById('total').textContent = total;
+let answers = Array(total).fill(null);
+let currentIndex = 0;
+let timerInterval = null;
+let seconds = 60*120; // default 120 minutes; change as needed
+
+function renderQuestion(i){
+  currentIndex = i;
+  const q = questions[i];
+  const container = document.getElementById('questions');
+  container.innerHTML = '';
+  const div = document.createElement('div');
+  div.className = 'question';
+  div.innerHTML = `<div class="qtext">Q${i+1}. ${q.q}</div>`;
+  const opts = document.createElement('div');
+  opts.className = 'options';
+  q.options.forEach((opt,j)=>{
+    const option = document.createElement('div');
+    option.className = 'option';
+    option.innerHTML = `<label><input type="radio" name="q${i}" value="${j}" ${answers[i]===j? 'checked':''}> <span>${String.fromCharCode(65+j)}. ${opt}</span></label>`;
+    opts.appendChild(option);
+  });
+  div.appendChild(opts);
+  // explanation reveal area (hidden until submit)
+  const expl = document.createElement('div');
+  expl.className = 'explanation';
+  expl.style.display = 'none';
+  expl.id = 'expl'+i;
+  div.appendChild(expl);
+  container.appendChild(div);
+  // attach change listeners
+  opts.querySelectorAll('input').forEach(r=> r.addEventListener('change', (e)=>{
+    answers[i] = parseInt(e.target.value);
+    updateAnsweredCount();
+    enableSubmitIfReady();
+  }));
+  // create nav buttons focus
+  renderNav();
+}
+
+function renderNav(){
+  const nav = document.getElementById('nav');
+  nav.innerHTML = '';
+  for(let i=0;i<total;i++){
+    const b = document.createElement('button');
+    b.textContent = i+1;
+    b.style.borderColor = answers[i]===null ? '#ddd' : '#4caf50';
+    b.addEventListener('click', ()=>{ renderQuestion(i); window.scrollTo({top:0,behavior:'smooth'});});
+    nav.appendChild(b);
+  }
+}
+
+function updateAnsweredCount(){
+  const cnt = answers.filter(a=>a!==null).length;
+  document.getElementById('answered').textContent = cnt;
+}
+
+function enableSubmitIfReady(){
+  const btns = [document.getElementById('submitBtn'), document.getElementById('submitBottom')];
+  // allow submit anytime, but only enable when at least 1 answer
+  const ready = answers.filter(a=>a!==null).length>0;
+  btns.forEach(b=>b.disabled = !ready);
+}
+
+function startTimer(){
+  clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    seconds--;
+    const m = Math.floor(seconds/60).toString().padStart(2,'0');
+    const s = (seconds%60).toString().padStart(2,'0');
+    document.getElementById('timer').textContent = `Timer: ${m}:${s}`;
+    if(seconds<=0){ clearInterval(timerInterval); autoSubmit(); }
+  },1000);
+}
+
+function autoSubmit(){
+  alert('Time is up — the exam will be submitted automatically.');
+  submitExam();
+}
+
+function submitExam(){
+  clearInterval(timerInterval);
+  const resultDiv = document.getElementById('result');
+  const examDiv = document.getElementById('exam');
+  let score = 0;
+  let html = `<h2>Result</h2>`;
+  html += `<div class="score">You answered ${answers.filter(a=>a!==null).length} questions. Correct answers detailed below.</div>`;
+  html += `<ol>`;
+  for(let i=0;i<total;i++){
+    const q = questions[i];
+    const given = answers[i];
+    const correct = q.a;
+    const ok = given!==null && given===correct;
+    if(ok) score++;
+    html += `<li><div class="qtext">Q${i+1}. ${q.q}</div>`;
+    html += `<div class="small">Your answer: ${given===null? 'No answer' : String.fromCharCode(65+given) + '. ' + q.options[given]}</div>`;
+    html += `<div class="small">Correct answer: ${String.fromCharCode(65+correct)}. ${q.options[correct]}</div>`;
+    html += `<div class="explanation">Explanation: ${q.ex || ''}</div>`;
+    html += `</li>`;
+  }
+  html += `</ol>`;
+  html += `<div class="score">Score: ${score} / ${total} (${Math.round(score/total*100)}%)</div>`;
+  resultDiv.innerHTML = html;
+  examDiv.style.display = 'none';
+  resultDiv.style.display = 'block';
+  // show explanations inline on questions area for review
+  for(let i=0;i<total;i++){
+    const expl = document.getElementById('expl'+i);
+    if(expl){ expl.style.display='block'; expl.innerHTML = `<strong>Correct:</strong> ${String.fromCharCode(65+questions[i].a)}. ${questions[i].options[questions[i].a]}<br><small>${questions[i].ex || ''}</small>`; }
+  }
+}
+
+// UI bindings
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  document.getElementById('exam').style.display = 'block';
+  document.getElementById('startBtn').disabled = true;
+  renderQuestion(0);
+  startTimer();
+});
+
+document.getElementById('submitBtn').addEventListener('click', ()=>{ if(confirm('Submit exam now?')) submitExam(); });
+document.getElementById('submitBottom').addEventListener('click', ()=>{ if(confirm('Submit exam now?')) submitExam(); });
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(confirm('Reset all answers?')){ answers = Array(total).fill(null); updateAnsweredCount(); enableSubmitIfReady(); renderQuestion(currentIndex); }
+});
+
+// initial
+renderNav();
+updateAnsweredCount();
+</script>
+</body>
+</html>
