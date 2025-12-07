@@ -6,6 +6,8 @@ https://github.com/Azure/azure-quickstart-templates
 
 https://aka.ms/azpipelines-parallelism-request
 
+https://azure.microsoft.com/free/
+
 Login to Azure:
 ```bash
 az login
