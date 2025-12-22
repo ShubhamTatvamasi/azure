@@ -1,10 +1,10 @@
-# Azure DevOps Pipeline Hierarchy
+# Azure DevOps Pipeline Hierarchy (with Tasks & Scripts)
 
 This document explains the structure of an Azure DevOps YAML pipeline
-and how different components relate to each other.
+and how **tasks and scripts** both fit into the hierarchy.
 
 **Hierarchy:**\
-Pipeline → Stages → Jobs → Steps → Tasks
+Pipeline → Stages → Jobs → Steps → (Tasks \| Scripts)
 
 ------------------------------------------------------------------------
 
@@ -15,8 +15,11 @@ An Azure DevOps pipeline is composed of multiple levels:
 -   **Pipeline**: The complete CI/CD workflow.
 -   **Stage**: Major phases (e.g., Build, Test, Deploy).
 -   **Job**: A set of steps executed on the same agent.
--   **Step**: An individual action (script or task).
+-   **Step**: An individual action in a job.
 -   **Task**: A prebuilt reusable step provided by Azure DevOps.
+-   **Script**: A custom command step (bash, pwsh, powershell, script).
+
+> ✅ Both **tasks and scripts are types of steps**.
 
 ------------------------------------------------------------------------
 
@@ -29,6 +32,7 @@ graph TD
     S --> J[Jobs]
     J --> ST[Steps]
     ST --> T[Tasks]
+    ST --> SC[Scripts]
 ```
 
 ------------------------------------------------------------------------
@@ -44,14 +48,22 @@ graph TD
     S1 --> J1[Job: BuildJob]
     J1 --> ST1[Step: Checkout]
     ST1 --> T1[Task: Checkout@1]
+
     J1 --> ST2[Step: Build]
     ST2 --> T2[Task: DotNetCoreCLI@2]
-    J1 --> ST3[Step: Publish]
-    ST3 --> T3[Task: PublishBuildArtifacts@1]
+
+    J1 --> ST3[Step: Run Tests]
+    ST3 --> SC1[Script: bash - run tests]
+
+    J1 --> ST4[Step: Publish]
+    ST4 --> T3[Task: PublishBuildArtifacts@1]
 
     S2 --> J2[Job: DeployJob]
-    J2 --> ST4[Step: Deploy]
-    ST4 --> T4[Task: Kubernetes@1]
+    J2 --> ST5[Step: Pre-Deploy Check]
+    ST5 --> SC2[Script: pwsh - validate]
+
+    J2 --> ST6[Step: Deploy]
+    ST6 --> T4[Task: Kubernetes@1]
 ```
 
 ------------------------------------------------------------------------
@@ -60,7 +72,7 @@ graph TD
 
 Stages run sequentially by default.\
 Jobs within a stage can run in parallel.\
-Steps inside a job always run sequentially.
+Steps (tasks & scripts) inside a job always run sequentially.
 
 ``` mermaid
 flowchart LR
@@ -69,7 +81,7 @@ flowchart LR
 
 ------------------------------------------------------------------------
 
-## 🧩 YAML Mapping to Hierarchy
+## 🧩 YAML Mapping with Tasks & Scripts
 
 ``` yaml
 stages:
@@ -78,15 +90,26 @@ stages:
   - job: BuildJob
     steps:
     - checkout: self
+
     - task: DotNetCoreCLI@2
       inputs:
         command: build
+
+    - bash: |
+        echo "Running unit tests"
+        dotnet test
+      displayName: Run Tests
+
     - script: echo "Build completed"
 
 - stage: Deploy
   jobs:
   - job: DeployJob
     steps:
+    - pwsh: |
+        Write-Host "Validating before deploy"
+      displayName: Pre-Deploy Validation
+
     - task: Kubernetes@1
       inputs:
         command: apply
@@ -112,15 +135,19 @@ Types: - `job` (agent-based) - `deployment` (environment-based)
 
 ### Step
 
-Single action in a job: - Script (`bash`, `pwsh`, `script`) - Task
-invocation
+Single action in a job. Two main kinds: - **Task** → reusable plugin -
+**Script** → custom shell/PowerShell commands
 
 ### Task
 
 Reusable plugin maintained by Microsoft or partners.\
 Examples: - `Docker@2` - `Kubernetes@1` - `AzureCLI@2`
 
-> Note: Tasks are a specialized type of step.
+### Script
+
+Inline commands you control: - `bash` - `pwsh` - `powershell` - `script`
+
+Used for glue logic, validations, or custom tooling.
 
 ------------------------------------------------------------------------
 
@@ -141,14 +168,16 @@ graph TD
 -   A pipeline can have one or many stages.
 -   Each stage must have at least one job.
 -   Each job contains one or more steps.
--   Tasks and scripts are both steps.
+-   **Steps can be either tasks or scripts.**
+-   Scripts give flexibility; tasks give standardization.
 -   Conditions and dependencies control execution flow.
 
 ------------------------------------------------------------------------
 
 ## 🚀 Conclusion
 
-Understanding this hierarchy helps in designing modular, scalable, and
-maintainable CI/CD pipelines using Azure DevOps.
+By combining **tasks for standard operations** and **scripts for custom
+logic**, Azure DevOps pipelines become both powerful and flexible while
+keeping a clear hierarchy.
 
 ------------------------------------------------------------------------
