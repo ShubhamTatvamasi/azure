@@ -8,6 +8,8 @@ https://aka.ms/azpipelines-parallelism-request
 
 https://azure.microsoft.com/free/
 
+https://learn.microsoft.com/en-us/azure/reliability/regions-list
+
 Login to Azure:
 ```bash
 az login
