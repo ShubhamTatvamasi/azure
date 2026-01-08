@@ -10,6 +10,8 @@ https://azure.microsoft.com/free/
 
 https://learn.microsoft.com/en-us/azure/reliability/regions-list
 
+https://azure.microsoft.com/en-us/pricing/details/virtual-machines/series/
+
 Login to Azure:
 ```bash
 az login
